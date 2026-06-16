@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Deep Sea Abyss - Ekspedisi Mesin Waktu</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Cinzel:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./style.css">
+  </head>
+  <body>
+    <!-- Canvas 3D -->
+    <div id="webgl-container"></div>
+
+    <!-- Partikel overlay -->
+    <canvas id="particles-canvas"></canvas>
+
+    <!-- Antarmuka Pengguna -->
+    <div id="ui-layer">
+      
+      <!-- 1. Loading Screen -->
+      <div id="loading-screen" class="screen active">
+        <div class="loading-content">
+          <div class="loading-ring">
+            <svg viewBox="0 0 100 100">
+              <circle class="ring-bg" cx="50" cy="50" r="45"/>
+              <circle class="ring-progress" id="ring-progress" cx="50" cy="50" r="45"/>
+            </svg>
+            <span id="loading-percent">0</span>
+          </div>
+          <p id="loading-text">Mempersiapkan ekspedisi...</p>
+        </div>
+      </div>
+
+      <!-- 2. Landing Page -->
+      <div id="landing-page" class="screen hidden">
+        <div class="landing-wrapper">
+          <div class="landing-glow"></div>
+          <p class="landing-tag">🌊 EKSPEDISI VIRTUAL</p>
+          <h1 class="landing-title">DEEP SEA<br><span>ABYSS</span></h1>
+          <p class="landing-subtitle">Selamat datang di ekspedisi mesin waktu ke dasar samudra purba.<br>Temukan makhluk-makhluk raksasa yang pernah menguasai lautan jutaan tahun lalu.</p>
+          <div class="landing-buttons">
+            <button id="btn-explore" class="btn-glow">
+              <span class="btn-glow-text">MULAI JELAJAH</span>
+              <span class="btn-glow-shine"></span>
+            </button>
+            <button id="btn-settings" class="btn-ghost">⚙️ Pengaturan</button>
+          </div>
+          <div class="landing-stats">
+            <div class="stat-item">
+              <span class="stat-number">3</span>
+              <span class="stat-label">Makhluk Purba</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+              <span class="stat-number">4000m</span>
+              <span class="stat-label">Kedalaman</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+              <span class="stat-number">252 Jt</span>
+              <span class="stat-label">Tahun Lalu</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Settings Modal -->
+      <div id="settings-modal" class="modal hidden">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+          <button id="btn-close-settings" class="btn-icon-close">✖</button>
+          <h2>⚙️ Pengaturan</h2>
+          
+          <div class="setting-item">
+            <div class="setting-info">
+              <span class="setting-icon">🎵</span>
+              <span>Musik Latar (BGM)</span>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="toggle-bgm" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          
+          <div class="setting-item">
+            <div class="setting-info">
+              <span class="setting-icon">🔊</span>
+              <span>Efek Suara (SFX)</span>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="toggle-sfx" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-info">
+              <span class="setting-icon">🌐</span>
+              <span>Bahasa</span>
+            </div>
+            <select id="select-language" class="select-styled">
+              <option value="id">Indonesia</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Story Sequence -->
+      <div id="story-sequence" class="screen hidden">
+        <button id="btn-skip-story" class="btn-skip">SKIP ⏭️</button>
+        <div class="story-wrapper">
+          <div class="story-indicator">
+            <span class="story-dot active" data-idx="0"></span>
+            <span class="story-dot" data-idx="1"></span>
+            <span class="story-dot" data-idx="2"></span>
+            <span class="story-dot" data-idx="3"></span>
+          </div>
+          <div class="story-card">
+            <div class="story-icon" id="story-icon">🦕</div>
+            <p id="story-text" class="story-text"></p>
+          </div>
+          <button id="btn-next-story" class="btn-glow btn-story-next">
+            <span class="btn-glow-text">Selanjutnya ➔</span>
+            <span class="btn-glow-shine"></span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 4. Main HUD -->
+      <div id="main-hud" class="screen hidden">
+        <header class="hud-top">
+          <div class="hud-depth">
+            <div class="depth-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/><circle cx="12" cy="12" r="3"/></svg>
+            </div>
+            <div class="depth-info">
+              <span class="depth-label">KEDALAMAN</span>
+              <span class="depth-value" id="depth-sensor">4000m</span>
+            </div>
+          </div>
+          <div class="hud-hint" id="hud-hint">
+            <span>🖱️ Scroll untuk menjelajah • Klik hewan untuk info</span>
+          </div>
+          <div class="hud-actions">
+            <button id="btn-hud-settings" class="btn-hud-icon" title="Pengaturan">⚙️</button>
+          </div>
+        </header>
+
+        <!-- Scroll Progress Indicator -->
+        <div class="scroll-track">
+          <div class="scroll-thumb" id="scroll-thumb"></div>
+        </div>
+
+        <!-- Info Panel -->
+        <aside id="info-panel" class="info-panel">
+          <button id="btn-close-panel" class="btn-icon-close">✖</button>
+          <div class="info-header">
+            <span class="info-tag" id="info-era">ERA MESOZOIKUM</span>
+            <h2 id="info-title">Plesiosaurus</h2>
+          </div>
+          <div class="info-specs">
+            <div class="info-spec">
+              <span class="info-spec-icon">📏</span>
+              <div>
+                <span class="info-spec-label">Ukuran</span>
+                <span class="info-spec-value" id="info-size">3.5 - 5 meter</span>
+              </div>
+            </div>
+            <div class="info-spec">
+              <span class="info-spec-icon">🍖</span>
+              <div>
+                <span class="info-spec-label">Diet</span>
+                <span class="info-spec-value" id="info-diet">Karnivora</span>
+              </div>
+            </div>
+          </div>
+          <p class="info-desc" id="info-desc">Deskripsi...</p>
+          <button id="btn-detail" class="btn-glow btn-detail">
+            <span class="btn-glow-text">Lihat Detail 3D 🔍</span>
+            <span class="btn-glow-shine"></span>
+          </button>
+        </aside>
+      </div>
+
+      <!-- 5. Detail View -->
+      <div id="detail-view" class="screen hidden">
+        <button id="btn-back-detail" class="btn-back">⬅ Kembali ke Tur</button>
+        <button id="btn-light-toggle" class="btn-light-toggle" title="Ubah Pencahayaan">💡 Mode Terang</button>
+        
+        <div class="detail-bottom-hint">
+          <div class="hint-item">🖱️ Klik Tahan + Geser = Putar</div>
+          <div class="hint-divider"></div>
+          <div class="hint-item">🔍 Scroll = Zoom</div>
+        </div>
+
+        <!-- Sidebar Museum Detail -->
+        <aside id="museum-sidebar" class="museum-sidebar">
+          <div class="museum-header">
+            <h2 id="museum-title">Nama Hewan</h2>
+            <span class="museum-era" id="museum-era">Era Mesozoikum</span>
+          </div>
+          
+          <div class="museum-tabs">
+            <button class="tab-btn active" data-tab="sejarah">Sejarah</button>
+            <button class="tab-btn" data-tab="anatomi">Anatomi</button>
+            <button class="tab-btn" data-tab="funfact">Fakta Unik</button>
+          </div>
+          
+          <!-- Sub-tabs Khusus Anatomi -->
+          <div class="museum-subtabs hidden" id="anatomy-subtabs">
+            <button class="subtab-btn active" data-subtab="mulut">Mulut</button>
+            <button class="subtab-btn" data-subtab="tubuh">Tubuh</button>
+            <button class="subtab-btn" data-subtab="sirip">Sirip/Kaki</button>
+            <button class="subtab-btn" data-subtab="ekor">Ekor</button>
+          </div>
+
+          <div class="museum-content">
+            <div id="museum-text" class="museum-text">
+              Pilih tab untuk membaca informasi detail tentang bagian tubuh ini atau sejarah spesiesnya.
+            </div>
+          </div>
+        </aside>
+      </div>
+
+    </div>
+
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>
