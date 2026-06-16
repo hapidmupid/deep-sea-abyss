@@ -47,22 +47,6 @@
             </button>
             <button id="btn-settings" class="btn-ghost">⚙️ Pengaturan</button>
           </div>
-          <div class="landing-stats">
-            <div class="stat-item">
-              <span class="stat-number">3</span>
-              <span class="stat-label">Makhluk Purba</span>
-            </div>
-            <div class="stat-divider"></div>
-            <div class="stat-item">
-              <span class="stat-number">4000m</span>
-              <span class="stat-label">Kedalaman</span>
-            </div>
-            <div class="stat-divider"></div>
-            <div class="stat-item">
-              <span class="stat-number">252 Jt</span>
-              <span class="stat-label">Tahun Lalu</span>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -131,19 +115,11 @@
       <!-- 4. Main HUD -->
       <div id="main-hud" class="screen hidden">
         <header class="hud-top">
-          <div class="hud-depth">
-            <div class="depth-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/><circle cx="12" cy="12" r="3"/></svg>
-            </div>
-            <div class="depth-info">
-              <span class="depth-label">KEDALAMAN</span>
-              <span class="depth-value" id="depth-sensor">4000m</span>
-            </div>
-          </div>
           <div class="hud-hint" id="hud-hint">
             <span>🖱️ Scroll untuk menjelajah • Klik hewan untuk info</span>
           </div>
           <div class="hud-actions">
+            <button id="btn-toggle-flashlight" class="btn-hud-icon active" title="Senter">🔦</button>
             <button id="btn-hud-settings" class="btn-hud-icon" title="Pengaturan">⚙️</button>
           </div>
         </header>

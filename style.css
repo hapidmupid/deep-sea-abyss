@@ -114,8 +114,8 @@ button { font-family: var(--font-body); cursor: pointer; pointer-events: auto; b
 .btn-glow:hover .btn-glow-shine { left: 100%; }
 .btn-ghost {
   padding: 12px 30px; border-radius: var(--radius-full);
-  background: transparent; border: 1px solid rgba(255,255,255,0.15);
-  color: var(--c-text-muted); font-size: 1rem; font-weight: 500;
+  background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255,255,255,0.3);
+  color: var(--c-text); font-size: 1rem; font-weight: 500;
   transition: all 0.3s;
 }
 .btn-ghost:hover { border-color: var(--c-primary); color: var(--c-primary); background: rgba(0,229,255,0.05); }

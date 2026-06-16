@@ -454,7 +454,7 @@ loadingManager.onLoad = function() {
 
 const gltfLoader = new GLTFLoader(loadingManager);
 
-function loadModel(path, name, targetSize, pos, rotY) {
+function loadModel(path, name, targetSize, pos, rotY, customSpeed) {
   gltfLoader.load(path, (gltf) => {
     const model = gltf.scene;
     
@@ -481,9 +481,24 @@ function loadModel(path, name, targetSize, pos, rotY) {
     const center = new THREE.Vector3();
     scaledBox.getCenter(center);
     
+    const orbitGroup = new THREE.Group();
+    orbitGroup.position.copy(pos); // Ini menjadi titik tengah putaran
+    
     const group = new THREE.Group();
-    group.position.copy(pos);
+    // Jika orbitRadius > 0, hewan diletakkan sejauh radius dari titik tengah
+    const radius = targetSize * 1.2; // Radius putaran berdasarkan ukuran hewan
+    group.position.set(radius, 0, 0);
+    
+    // Putar hewan agar menghadap arah putaran (tangen orbit).
+    // Menggunakan rotY agar bisa disesuaikan jika model aslinya menyamping.
     group.rotation.y = rotY;
+    
+    orbitGroup.add(group);
+    
+    // Tambahkan lampu khusus di atas setiap hewan agar selalu terang
+    const animalLight = new THREE.PointLight(0x44aaff, 25, 45);
+    animalLight.position.set(0, 4, 0);
+    group.add(animalLight);
     
     // Posisikan model agar titik tengahnya berada tepat di (0,0,0) relative ke parent group
     model.position.sub(center);
@@ -498,6 +513,10 @@ function loadModel(path, name, targetSize, pos, rotY) {
       name: name, 
       state: 'idle', 
       group: group,
+      orbitGroup: orbitGroup,
+      orbitSpeed: customSpeed || (0.15 + Math.random() * 0.1), // Kecepatan putaran saat ini
+      baseSpeed: customSpeed || (0.15 + Math.random() * 0.1),  // Menyimpan kecepatan asli untuk reset
+      baseY: pos.y,
       modelMeshes: []
     };
     group.add(hitBox);
@@ -524,27 +543,27 @@ function loadModel(path, name, targetSize, pos, rotY) {
       mixers.push({ mixer: mixer, group: group });
     }
 
-    scene.add(group);
+    scene.add(orbitGroup);
     objects.push(hitBox);
-    allGroups.push(group);
+    allGroups.push(orbitGroup); // Sekarang kita simpan orbitGroup untuk visibilitas
   }, undefined, (error) => {
     console.error(`Gagal meload model ${path}:`, error);
   });
 }
 
-// Load Real Models
-loadModel('./models/Plesiosaurus.glb', 'Plesiosaurus', 8.0, new THREE.Vector3(0, 1, 0), 0);
+// Load Real Models - Posisikan di tengah jalur agar mereka mengitari jalur kamera
+// Plesiosaurus berenang mundur dengan -Math.PI/2, jadi kita balik dengan Math.PI/2
+loadModel('./models/Plesiosaurus.glb', 'Plesiosaurus', 8.0, new THREE.Vector3(0, 1, -5), Math.PI / 2, 0.08);
 
-// We add spotlights specific to animals to make them very clear
-const megalodonLight = new THREE.PointLight(0x44aaff, 30, 40);
-megalodonLight.position.set(-8, 3, -15);
-scene.add(megalodonLight);
-loadModel('./models/megalodon.glb', 'Megalodon', 12.0, new THREE.Vector3(-10, 0, -15), Math.PI / 4);
+// Megalodon & Mosasaurus modelnya mundur, diputar 180 derajat (Math.PI)
+loadModel('./models/megalodon.glb', 'Megalodon', 12.0, new THREE.Vector3(0, -1, -22), Math.PI, 0.12);
+loadModel('./models/mosasaurus.glb', 'Mosasaurus', 14.0, new THREE.Vector3(0, -3, -40), Math.PI, 0.10);
 
-const mosaLight = new THREE.PointLight(0x44aaff, 30, 40);
-mosaLight.position.set(10, 4, -30);
-scene.add(mosaLight);
-loadModel('./models/mosasaurus.glb', 'Mosasaurus', 14.0, new THREE.Vector3(12, 1, -30), -Math.PI / 4);
+// Tylosaurus ditambahkan
+loadModel('./models/Tylosaurus.glb', 'Tylosaurus', 13.0, new THREE.Vector3(0, -4, -55), Math.PI, 0.11);
+
+// Coelacanth ditambahkan ("fosil hidup")
+loadModel('./models/coelacanth.glb', 'Coelacanth', 5.0, new THREE.Vector3(0, 0, -14), Math.PI, 0.07);
 
 // Senter (Flashlight) Model
 gltfLoader.load('./models/senter.glb', (gltf) => {
@@ -604,9 +623,6 @@ function updateCameraPosition(t) {
   const lookT = Math.min(t + 0.1, 1);
   const lookPos = cameraSpline.getPointAt(lookT);
   camera.lookAt(lookPos);
-  
-  const depth = Math.floor(4000 + t * 3000);
-  document.getElementById('depth-sensor').innerText = `${Math.max(500, depth)}m`;
   
   const thumb = document.getElementById('scroll-thumb');
   thumb.style.top = `${t * 170}px`;
@@ -715,8 +731,20 @@ window.addEventListener('click', () => {
     playAnimalSfx(selectedObject.userData.name);
   }
   
+  // Hapus animasi muter-muter sebelumnya, buatkan berenang cepat selama 3 detik
+  const og = hoveredObject.userData.orbitGroup;
+  const baseSpd = hoveredObject.userData.baseSpeed;
+  
+  // Hentikan animasi GSAP sebelumnya jika user men-klik berulang kali
+  gsap.killTweensOf(hoveredObject.userData);
+  
+  // Mempercepat seketika
+  gsap.to(hoveredObject.userData, { orbitSpeed: baseSpd + 0.8, duration: 0.5, ease: "power2.out" });
+  
+  // Kembali ke kecepatan normal setelah 3.5 detik (3 detik ngebut + 0.5 transisi pelan)
+  gsap.to(hoveredObject.userData, { orbitSpeed: baseSpd, duration: 1.0, delay: 3.5, ease: "power2.inOut" });
+  
   const g = hoveredObject.userData.group;
-  gsap.to(g.rotation, { y: g.rotation.y + Math.PI * 2, duration: 1.2, ease: "elastic.out(1, 0.4)" });
   gsap.to(g.scale, { x: 1.15, y: 1.15, z: 1.15, duration: 0.3, yoyo: true, repeat: 1 });
   
   showInfoPanel(hoveredObject.userData.name);
@@ -741,6 +769,21 @@ document.getElementById('btn-hud-settings').addEventListener('click', () => { pl
 document.getElementById('btn-close-settings').addEventListener('click', () => { playSfx('click'); settingsModal.classList.add('hidden'); });
 document.getElementById('toggle-bgm').addEventListener('change', (e) => { isBgmEnabled = e.target.checked; ensureAudio(); setBGMEnabled(isBgmEnabled); });
 document.getElementById('toggle-sfx').addEventListener('change', (e) => { isSfxEnabled = e.target.checked; setSFXEnabled(isSfxEnabled); });
+
+let isFlashlightOn = true;
+document.getElementById('btn-toggle-flashlight').addEventListener('click', (e) => {
+  playSfx('click');
+  isFlashlightOn = !isFlashlightOn;
+  spotLight.visible = isFlashlightOn;
+  const btn = e.currentTarget;
+  if (isFlashlightOn) {
+    btn.classList.add('active');
+    btn.style.opacity = '1';
+  } else {
+    btn.classList.remove('active');
+    btn.style.opacity = '0.5';
+  }
+});
 
 // --- Story ---
 const storyData = [
@@ -864,6 +907,42 @@ const creatureData = {
       sirip: new THREE.Vector3(1.5, -0.5, 1),
       ekor: new THREE.Vector3(0, 0, -4.5)
     }
+  },
+  'Tylosaurus': { 
+    era: 'ERA KAPUR AKHIR', size: '12 – 14 meter', diet: 'Karnivora (Ikan, Hiu, Reptil Laut)', 
+    desc: 'Pemangsa puncak lautan dangkal purba yang berkerabat dekat dengan Mosasaurus. Ia memiliki moncong silinder panjang yang digunakan untuk menabrak mangsa.',
+    history: 'Fosil Tylosaurus banyak ditemukan di formasi Niobrara Chalk di Amerika Serikat, yang dulunya merupakan Laut Interior Barat (Western Interior Seaway) yang membelah benua Amerika Utara pada zaman Kapur.',
+    funfact: 'Moncongnya tidak memiliki gigi di bagian paling ujung! Para ilmuwan menduga moncong keras ini digunakan seperti alat pendobrak (battering ram) untuk membuat mangsanya pingsan sebelum digigit.',
+    anatomy: {
+      mulut: 'Memiliki gigi-gigi berbentuk kerucut tajam yang digunakan untuk menusuk dan menahan mangsa licin, ditambah gigi pterygoid di langit-langit mulut untuk menarik mangsa ke kerongkongan.',
+      tubuh: 'Tubuhnya sangat ramping dan panjang seperti ular laut raksasa, desain yang ideal untuk melesat cepat dan menyergap mangsa secara mendadak.',
+      sirip: 'Sirip-siripnya relatif kecil dan kaku dibandingkan badannya yang panjang, berfungsi lebih sebagai penyeimbang dan kemudi saat berenang dengan kecepatan tinggi.',
+      ekor: 'Menggunakan gerakan undulasi lateral (meliuk-liukkan seluruh bagian belakang tubuhnya) untuk berenang, didorong oleh ekor kuat yang memiliki sirip asimetris di bagian bawah.'
+    },
+    anatomyOffsets: {
+      mulut: new THREE.Vector3(0, 0.5, 4.0),
+      tubuh: new THREE.Vector3(0, 0, 0),
+      sirip: new THREE.Vector3(1.2, -0.5, 1),
+      ekor: new THREE.Vector3(0, 0, -4.0)
+    }
+  },
+  'Coelacanth': { 
+    era: 'ERA DEVON HINGGA KINI', size: '1.5 – 2 meter', diet: 'Karnivora (Ikan Kecil, Cumi-cumi)', 
+    desc: 'Ikan prasejarah yang dijuluki "fosil hidup" karena wujudnya nyaris tidak berubah selama 400 juta tahun. Sempat dianggap punah bersama dinosaurus hingga ditemukan hidup kembali pada tahun 1938!',
+    history: 'Pertama kali ditemukan hidup di jaring nelayan di lepas pantai Afrika Selatan oleh Marjorie Courtenay-Latimer pada 1938. Saat ini hidup bersembunyi di perairan dalam bergua.',
+    funfact: 'Coelacanth memiliki organ listrik khusus di moncongnya (organ rostral) yang berfungsi mendeteksi medan elektromagnetik dari mangsanya di kedalaman laut yang gelap gulita.',
+    anatomy: {
+      mulut: 'Rahangnya bisa terbuka sangat lebar dan mendadak berkat sendi intrakranial (engsel di tengkorak) yang unik, berfungsi untuk menyedot mangsa dengan cepat.',
+      tubuh: 'Tubuhnya ditutupi sisik cosmoid purba yang sangat tebal berlapis-lapis layaknya baju zirah pelindung (armor).',
+      sirip: 'Memiliki empat sirip berlobus (berdaging tebal) yang unik, mereka menggerakkannya secara menyilang menyerupai pola kaki hewan darat bertetrapoda yang sedang berjalan!',
+      ekor: 'Ekornya sangat unik karena terdiri dari tiga lobus (epicaudal lobe), dengan lobus kecil berbentuk rumbai di bagian tengahnya.'
+    },
+    anatomyOffsets: {
+      mulut: new THREE.Vector3(0, 0.2, 2.0),
+      tubuh: new THREE.Vector3(0, 0, 0),
+      sirip: new THREE.Vector3(0.5, -0.5, 0.5),
+      ekor: new THREE.Vector3(0, 0, -2.0)
+    }
   }
 };
 
@@ -961,9 +1040,9 @@ document.getElementById('btn-detail').addEventListener('click', () => {
   currentSubTab = 'mulut';
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === 'sejarah'));
   document.querySelectorAll('.subtab-btn').forEach(b => b.classList.toggle('active', b.dataset.subtab === 'mulut'));
-  updateMuseumContent();
-  
-  allGroups.forEach(g => { if (g !== selectedObject.userData.group) g.visible = false; });
+  // Sembunyikan hewan lain (pastikan kita cek orbitGroup, bukan group di dalamnya)
+  const selectedOrbit = selectedObject.userData.orbitGroup;
+  allGroups.forEach(g => { if (g !== selectedOrbit) g.visible = false; });
   floor.visible = false;
   kelps.forEach(k => k.visible = false);
   bubbleClusters.forEach(b => b.visible = false);
@@ -977,13 +1056,14 @@ document.getElementById('btn-detail').addEventListener('click', () => {
   scene.background = new THREE.Color(0x010810);
   studioDirLight.intensity = 0;
   
-  const objPos = selectedObject.userData.group.position.clone();
   const g = selectedObject.userData.group;
+  const objPos = new THREE.Vector3();
+  g.getWorldPosition(objPos); // Ambil posisi aslinya di dunia (karena sekarang ada di dalam orbitGroup)
   
-  // Animasi masuk hewan (Majestic Spin)
+  // Animasi masuk hewan (Majestic Spin dihapus saat berenang, tapi di detail view kita putar pelan saja agar terlihat jelas)
   gsap.fromTo(g.rotation, 
-    { y: g.rotation.y - Math.PI }, 
-    { y: g.rotation.y, duration: 2, ease: "power2.out" }
+    { x: g.rotation.x - 0.2 }, 
+    { x: g.rotation.x, duration: 2, ease: "power2.out" }
   );
 
   gsap.to(camera.position, {
@@ -1083,12 +1163,20 @@ function animate() {
   if (currentState !== STATES.DETAIL) {
     objects.forEach(obj => {
       const g = obj.userData.group;
+      const og = obj.userData.orbitGroup;
       const state = obj.userData.state;
       let speed = 1.5, amp = 0.15, rotAmp = 0.02;
       
       if (state === 'hover') { speed = 3; amp = 0.4; rotAmp = 0.05; }
       
-      g.position.y += Math.sin(time * speed) * amp * 0.02;
+      // Berenang mengelilingi jalur
+      if (og) {
+        og.rotation.y += obj.userData.orbitSpeed * delta; // Bergerak melingkar maju
+        og.position.y = obj.userData.baseY + Math.sin(time * 0.5) * 1.5; // Naik turun perlahan
+      }
+      
+      // Animasi gerak tubuh (bobbing)
+      g.position.y = Math.sin(time * speed) * amp * 0.02;
       g.rotation.z = Math.sin(time * speed * 0.8) * rotAmp;
       g.rotation.x = Math.cos(time * speed * 0.6) * rotAmp * 0.5;
     });
