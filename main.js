@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { gsap } from 'gsap';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { initAudio, startBGM, setBGMEnabled, setSFXEnabled, playClickSfx, playHoverSfx, playWhooshSfx, playDiveSfx, playDetailSfx } from './audio.js';
+import { initAudio, startBGM, setBGMEnabled, setSFXEnabled, playClickSfx, playHoverSfx, playWhooshSfx, playDiveSfx, playDetailSfx, playAnimalSfx } from './audio.js';
 
 // ==========================================
 // STATE MACHINE
@@ -709,6 +709,11 @@ window.addEventListener('click', () => {
   
   hoveredObject.userData.state = 'click';
   selectedObject = hoveredObject;
+  
+  // Memainkan SFX MP3 khusus jika ada (seperti auman Megalodon)
+  if (selectedObject.userData.name) {
+    playAnimalSfx(selectedObject.userData.name);
+  }
   
   const g = hoveredObject.userData.group;
   gsap.to(g.rotation, { y: g.rotation.y + Math.PI * 2, duration: 1.2, ease: "elastic.out(1, 0.4)" });

@@ -22,7 +22,18 @@ function initAudio() {
   sfxGainNode = audioCtx.createGain();
   sfxGainNode.gain.value = 0.5;
   sfxGainNode.connect(audioCtx.destination);
+  
+  // Load external MP3 sound
+  fetch('./models/megalodon.mp3')
+    .then(response => response.arrayBuffer())
+    .then(data => audioCtx.decodeAudioData(data))
+    .then(buffer => {
+      megalodonBuffer = buffer;
+    })
+    .catch(e => console.log("Gagal memuat megalodon.mp3 (file mungkin belum ada)", e));
 }
+
+let megalodonBuffer = null;
 
 // ==========================================
 // BACKGROUND MUSIC (Ambient Underwater Drone)
@@ -300,6 +311,22 @@ function playDiveSfx() {
   }
 }
 
+function playAnimalSfx(animalName) {
+  if (!audioCtx) return;
+  
+  if (animalName === 'Megalodon' && megalodonBuffer) {
+    const source = audioCtx.createBufferSource();
+    source.buffer = megalodonBuffer;
+    
+    const gain = audioCtx.createGain();
+    gain.gain.value = 1.0; // Volume maksimal untuk auman megalodon
+    
+    source.connect(gain);
+    gain.connect(sfxGainNode);
+    source.start();
+  }
+}
+
 function playDetailSfx() {
   if (!audioCtx) return;
   
@@ -357,5 +384,6 @@ export {
   playHoverSfx,
   playWhooshSfx,
   playDiveSfx,
-  playDetailSfx
+  playDetailSfx,
+  playAnimalSfx
 };
