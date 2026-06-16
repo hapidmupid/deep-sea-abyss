@@ -968,13 +968,32 @@ function updateMuseumContent() {
   
   document.getElementById('museum-title').innerText = selectedObject.userData.name;
   document.getElementById('museum-era').innerText = data.era;
-  
+  // Populate additional specs
+  const sizeEl = document.getElementById('museum-size');
+  const dietEl = document.getElementById('museum-diet');
+  const descEl = document.getElementById('museum-desc');
+  if (sizeEl) sizeEl.innerText = data.size || '';
+  if (dietEl) dietEl.innerText = data.diet || '';
+  if (descEl) descEl.innerText = data.desc || '';
+
   const textEl = document.getElementById('museum-text');
   const subtabsEl = document.getElementById('anatomy-subtabs');
+
   
   if (currentMuseumTab === 'anatomi') {
     subtabsEl.classList.remove('hidden');
     textEl.innerText = data.anatomy[currentSubTab];
+  } else if (currentMuseumTab === 'info') {
+    // Display comprehensive information
+    subtabsEl.classList.add('hidden');
+    const html = [];
+    html.push(`<strong>Era:</strong> ${data.era}`);
+    html.push(`<strong>Ukuran:</strong> ${data.size}`);
+    html.push(`<strong>Diet:</strong> ${data.diet}`);
+    html.push(`<strong>Deskripsi:</strong> ${data.desc}`);
+    html.push(`<strong>Sejarah:</strong> ${data.history}`);
+    html.push(`<strong>Fakta Unik:</strong> ${data.funfact}`);
+    textEl.innerHTML = html.join('<br><br>');
   } else {
     subtabsEl.classList.add('hidden');
     if (currentMuseumTab === 'sejarah') textEl.innerText = data.history;

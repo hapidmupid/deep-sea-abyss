@@ -177,8 +177,16 @@
             <h2 id="museum-title">Nama Hewan</h2>
             <span class="museum-era" id="museum-era">Era Mesozoikum</span>
           </div>
+
+          <div class="museum-specs" style="display: flex; gap: 15px; margin-bottom: 15px; font-size: 0.85rem; color: var(--c-text-muted);">
+            <div><span style="color: var(--c-primary);">📏</span> <span id="museum-size"></span></div>
+            <div><span style="color: var(--c-primary);">🍽️</span> <span id="museum-diet"></span></div>
+          </div>
+
+          <p id="museum-desc" style="font-size: 0.95rem; line-height: 1.6; margin-bottom: 20px; color: var(--c-text);"></p>
           
           <div class="museum-tabs">
+            <button class="tab-btn" data-tab="info">Info Lengkap</button>
             <button class="tab-btn active" data-tab="sejarah">Sejarah</button>
             <button class="tab-btn" data-tab="anatomi">Anatomi</button>
             <button class="tab-btn" data-tab="funfact">Fakta Unik</button>
