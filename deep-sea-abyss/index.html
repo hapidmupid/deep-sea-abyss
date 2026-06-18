@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Deep Sea Abyss - Website 3D Interaktif Virtual Tour Ekosistem Bawah Laut Purba" />
+    <title>Deep Sea Abyss</title>
+  </head>
+  <body>
+    <!-- Canvas utama untuk render scene Three.js -->
+    <canvas id="webgl"></canvas>
+
+    <!-- Loading screen / intro awal -->
+    <section id="loading-screen" class="loading-screen">
+      <div class="loading-bg-orb orb-one"></div>
+      <div class="loading-bg-orb orb-two"></div>
+      <div class="loading-card">
+        <p class="eyebrow">Virtual Tour 3D Interaktif</p>
+        <h1>DEEP SEA ABYSS</h1>
+        <p class="subtitle">Website 3D Interaktif Virtual Tour Ekosistem Bawah Laut Purba</p>
+        <div class="loading-line">
+          <div id="loading-bar" class="loading-bar"></div>
+        </div>
+        <div class="loading-meta">
+          <span id="loading-text">Memuat ekosistem purba...</span>
+          <span id="loading-percent">0%</span>
+        </div>
+        <button id="start-btn" class="primary-btn hidden">MULAI EKSPLORASI</button>
+      </div>
+    </section>
+
+    <!-- Tombol skip saat cinematic intro berjalan -->
+    <button id="skip-btn" class="skip-btn hidden">SKIP</button>
+
+    <!-- HUD atas -->
+    <header id="hud" class="hud hidden-ui">
+      <div class="brand-mini">
+        <span class="pulse-dot"></span>
+        <strong>DEEP SEA ABYSS</strong>
+      </div>
+      <div class="hud-readout">
+        <span>Depth: <strong id="depth-value">1240 m</strong></span>
+        <span>Compass: <strong id="compass-value">NE</strong></span>
+      </div>
+      <div class="hud-actions">
+        <button id="audio-btn" class="hud-btn" type="button">Audio: OFF</button>
+        <button id="help-btn" class="hud-btn round" type="button">?</button>
+      </div>
+    </header>
+
+    <!-- Panel informasi edukatif di kanan -->
+    <aside id="info-panel" class="info-panel">
+      <button id="close-panel" class="close-panel" type="button">×</button>
+      <p class="panel-kicker">Data Paleontologi</p>
+      <h2 id="panel-title">Plesiosaurus</h2>
+      <dl>
+        <div>
+          <dt>Nama Ilmiah</dt>
+          <dd id="panel-scientific">Plesiosauria</dd>
+        </div>
+        <div>
+          <dt>Era Hidup</dt>
+          <dd id="panel-era">Mesozoikum</dd>
+        </div>
+        <div>
+          <dt>Ukuran</dt>
+          <dd id="panel-size">3–15 meter</dd>
+        </div>
+        <div>
+          <dt>Diet</dt>
+          <dd id="panel-diet">Karnivora</dd>
+        </div>
+      </dl>
+      <h3>Fakta Menarik</h3>
+      <p id="panel-fact">Klik objek makhluk purba untuk melihat informasi edukatif.</p>
+    </aside>
+
+    <!-- Slider navigasi linear di bawah -->
+    <section id="slider-container" class="slider-container hidden-ui">
+      <div class="slider-topline">
+        <span id="location-label">Tampak Depan Plesiosaurus</span>
+        <span id="slider-percent">0%</span>
+      </div>
+      <input id="camera-slider" type="range" min="0" max="100" value="0" />
+      <div class="slider-hint">Geser slider / swipe layar untuk menjelajah kamera sinematik</div>
+    </section>
+
+    <!-- Minimap sederhana berbasis SVG -->
+    <section id="minimap" class="minimap hidden-ui" aria-label="Minimap jalur kamera">
+      <svg viewBox="0 0 220 120" role="img">
+        <path d="M20 82 C55 15, 95 25, 115 70 S170 115, 200 40" class="map-path" />
+        <circle cx="20" cy="82" r="4" class="poi" />
+        <text x="8" y="104">Plesio</text>
+        <circle cx="110" cy="70" r="4" class="poi" />
+        <text x="88" y="96">Ammonite</text>
+        <circle cx="168" cy="92" r="4" class="poi" />
+        <text x="145" y="113">Mosa</text>
+        <circle cx="200" cy="40" r="4" class="poi" />
+        <text x="158" y="28">Angler</text>
+        <circle id="map-camera-dot" cx="20" cy="82" r="6" class="camera-dot" />
+      </svg>
+    </section>
+
+    <!-- Modal panduan -->
+    <section id="help-modal" class="modal hidden">
+      <div class="modal-card">
+        <h2>Panduan Eksplorasi</h2>
+        <p>Website ini memakai Linear-Sliding Navigation, jadi kamera dikunci pada jalur sinematik agar kamu tidak bingung arah.</p>
+        <ul>
+          <li>Geser slider bawah untuk bergerak mengikuti jalur kamera.</li>
+          <li>Swipe kanan/kiri pada perangkat mobile.</li>
+          <li>Gerakkan mouse untuk mengarahkan senter.</li>
+          <li>Arahkan kursor ke makhluk purba untuk melihat highlight.</li>
+          <li>Klik makhluk purba untuk membuka panel informasi.</li>
+        </ul>
+        <button id="understand-btn" class="primary-btn" type="button">Mengerti</button>
+      </div>
+    </section>
+
+    <!-- Vignette agar suasana bawah laut lebih sinematik -->
+    <div class="vignette"></div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
